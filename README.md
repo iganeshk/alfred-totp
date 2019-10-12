@@ -6,13 +6,13 @@ Get totp codes in Alfred in a secure way.
 
 `$ brew install oauthtool`
 
-Then insert your totp codes into the macOS keychain `atotp.keychain` like so:
+Then insert your totp codes into the macOS keychain `alfred-totp.keychain` like so:
 
 ```
 $ security -i
-> create-keychain atotp.keychain
-> set-keychain-settings atotp.keychain
-> add-generic-password -a atotp -s "Name of service" -w "TOTP CODE" atotp.keychain
+> create-keychain alfred-totp.keychain
+> set-keychain-settings alfred-totp.keychain
+> add-generic-password -a alfred-totp -s "Name of service" -w "TOTP CODE" alfred-totp.keychain
 > # repeat above command as needed, crtl-c to quit.
 ```
 
