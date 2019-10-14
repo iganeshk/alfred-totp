@@ -21,7 +21,7 @@ $ security -i
 > # repeat above command as needed, crtl-c to quit.
 ```
 
-Now [download](https://github.com/waynehoover/atotp/releases) and install the workflow.
+Now [download](https://github.com/iganeshk/alfred-totp/releases/latest) the latest workflow and install it.
 
 ## Usage
 
