@@ -9,8 +9,6 @@
   Obtain one time passwords from alfred.
 </p>
 
-<br />
-
 ## Requirements
 
 * [AlfredApp](https://www.alfredapp.com/) (Alfred 3 & 4 tested)
