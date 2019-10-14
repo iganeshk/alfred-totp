@@ -1,23 +1,38 @@
-# Alfred TOTP
+<h1 align="center">
+  <a href="https://github.com/iganeshk/alfred-totp" title="Alfred TOTP Workflow">
+    <img alt="Alfred TOTP" src="https://github.com/iganeshk/alfred-totp/raw/master/assets/alfred-totp.png" width="15%"/>
+  </a>
+  <br />
+  Alfred TOTP Workflow
+</h1>
+<p align="center">
+  Obtain one time passwords from alfred.
+</p>
 
-Alfred 2-factor authentication workflow
+<br />
 
 ## Requirements
 
-* AlfredApp
-* Brew package manager
+* [AlfredApp](https://www.alfredapp.com/) (Alfred 3 & 4 tested)
+* [Brew](https://brew.sh/) package manager
+* Python3 (SteamGuard OTP support)
 
 ## Installation
 
 `$ brew install oauthtool`
 
-Then insert your totp codes into the macOS keychain `alfred-totp.keychain` like so:
+## Obtaining your TOTP secrets
+You could either export it from the existing applications you're using or generate a new secret from the website's user control panel.
+
+For SteamGuard OTP, follow [this guide](https://github.com/SteamTimeIdler/stidler/wiki/Getting-your-'shared_secret'-code-for-use-with-Auto-Restarter-on-Mobile-Authentication) to obtain your secret key.
+
+Then insert your totp secret codes into the macOS keychain `alfred-totp.keychain` like so:
 
 ```
 $ security -i
 > create-keychain alfred-totp.keychain
 > set-keychain-settings alfred-totp.keychain
-> add-generic-password -a alfred-totp -s "Name of service" -w "TOTP CODE" alfred-totp.keychain
+> add-generic-password -a alfred-totp -s "name of service" -w "totp secret" alfred-totp.keychain
 > # repeat above command as needed, crtl-c to quit.
 ```
 
@@ -40,9 +55,8 @@ If you would like to display all the service's passwords at once, configure the 
 
 <img alt="alfred-totp-2" src="https://github.com/iganeshk/alfred-totp/raw/master/assets/alfred_totp_4_list_all.png" width="80%" />
 
-## Finding your totp codes
-On most websites you can login and see your totp code in the 2-factor setting page.
+* Note: Icons reflected in the results are located at workflow's icon directory and follow service name as entered in the keychain.
 
 ## Thanks
 
-Thanks to [aria.ia](https://www.aria.ai/blog/posts/storing-secrets-with-keychain.html) for the code on how to list items from macOS keychain.
+Thanks to [waynehoover](https://github.com/waynehoover/) and [aria.ia](https://www.aria.ai/blog/posts/storing-secrets-with-keychain.html) for the code on how to list items from macOS keychain.

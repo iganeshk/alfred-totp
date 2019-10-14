@@ -1,7 +1,7 @@
 require "json"
 
-module ATotp
-  VERSION = "0.1.2"
+module AlfredTOTP
+  VERSION = "0.1.3"
   ENV["PATH"] = "/usr/local/bin:/usr/bin"
 
   # This could possibly be cached.
@@ -22,21 +22,34 @@ module ATotp
     io.to_s.strip
   end
 
+  def self.get_steam_otp(pass)
+    command = "python3 steam.py #{pass}"
+    io = IO::Memory.new
+    Process.run(command, shell: true, output: io)
+    io.to_s.strip
+  end
+
   def self.alfred_out
     ids.map do |id|
-      pass = get_pass id
-      code = gen_code pass
-      workflow_path = Dir.current
-      if File.exists?("#{workflow_path}/icons/#{id}.png")
-        alfred_icon = "#{workflow_path}/icons/#{id}.png"
+      # if service is steam, run it's script to get otp
+      if id == "steam"
+        pass = get_pass id
+        code = get_steam_otp pass
       else
-        alfred_icon = "#{workflow_path}/icon.png"
+        pass = get_pass id
+        code = gen_code pass
+      end
+      workflow_path = Dir.current
+      if File.exists?("./icons/#{id}.png")
+        alfred_icon = "./icons/#{id}.png"
+      else
+        alfred_icon = "./icon.png"
       end
       {
         uid:      id,
         title:    id,
         subtitle: code,
-        arg:      pass,
+        arg:      code,
         icon:     {
           path: "#{alfred_icon}",
         },
@@ -44,7 +57,7 @@ module ATotp
           alt: {
             valid:    true,
             subtitle: "copy #{code}",
-            arg:      pass,
+            arg:      code,
           },
         },
       }
