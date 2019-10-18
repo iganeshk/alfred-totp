@@ -1,0 +1,17 @@
+dist: buster
+
+language: crystal
+
+crystal:
+  - latest
+  # - nightly
+
+script:
+  - crystal spec --verbose
+  # - crystal tool format --check
+
+branches:
+  only:
+    - master
+    # Tags
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/

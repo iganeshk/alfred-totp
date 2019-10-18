@@ -7,6 +7,12 @@
 </h1>
 <p align="center">
   Obtain one time passwords from alfred.
+
+[![Version](https://img.shields.io/github/tag/iganeshk/alfred-totp.svg?style=flat-square&label=release)](https://github.com/iganeshk/alfred-totp/tags)
+[![Build Status](https://travis-ci.com/iganeshk/alfred-totp.svg?branch=master)](https://travis-ci.com/iganeshk/alfred-totp)
+[![Issues](https://img.shields.io/github/issues/iganeshk/alfred-totp.svg?style=flat-square)](https://github.com/iganeshk/alfred-totp/issues)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE.md)
+<!-- [![Downloads](https://img.shields.io/github/downloads/iganeshk/alfred-totp/total.svg?style=flat-square)](https://github.com/iganeshk/alfred-totp/releases) -->
 </p>
 
 ## Requirements
@@ -18,6 +24,8 @@
 ## Installation
 
 `$ brew install oauthtool`
+
+Now [download](https://github.com/iganeshk/alfred-totp/releases/latest) the latest workflow and install it.
 
 ## Obtaining your TOTP secrets
 You could either export it from the existing applications you're using or generate a new secret from the website's user control panel.
@@ -33,8 +41,6 @@ $ security -i
 > add-generic-password -a alfred-totp -s "name of service" -w "totp secret" alfred-totp.keychain
 > # repeat above command as needed, crtl-c to quit.
 ```
-
-Now [download](https://github.com/iganeshk/alfred-totp/releases/latest) the latest workflow and install it.
 
 ## Usage
 

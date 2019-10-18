@@ -1,2 +1,2 @@
 require "spec"
-require "../src/bw-alfred"
+require "../src/Alfred-TOTP"

@@ -1,7 +1,7 @@
 #!/usr/env/python3
 # coding=utf-8
 #
-# Generate Steamguard OTP with the shared secret passed as an arguemtn
+# Generate Steamguard OTP with the shared secret passed as an argument
 # Ganesh Velu 
 
 import hmac

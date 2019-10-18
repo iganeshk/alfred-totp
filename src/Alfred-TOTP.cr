@@ -1,6 +1,7 @@
 require "json"
 
-module AlfredTOTP
+# TODO: Write documentation for `Alfred::TOTP`
+module Alfred::TOTP
   VERSION = "0.1.3"
   ENV["PATH"] = "/usr/local/bin:/usr/bin"
 
