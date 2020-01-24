@@ -1,4 +1,5 @@
 # Project oriented files to be ignored
+.env
 info.plist
 lib/
 assets/

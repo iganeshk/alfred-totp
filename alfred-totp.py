@@ -37,18 +37,6 @@ def main(wf):
     # Get args from Workflow3, already in normalized Unicode.
     # This is also necessary for "magic" arguments to work.
 
-    # py3
-    # from subprocess import run, PIPE
-    # py2
-    # from subprocess import check_output as run, PIPE
-    # import hmac
-    # import base64
-    # import hashlib
-    # import codecs
-    # import time
-    # import json
-    # import re
-
 
     def get_steamguard_code(secret):
         """
@@ -60,35 +48,34 @@ def main(wf):
                               'X', 'Y']
         # py3
         """
-        msg = bytes.fromhex(('%016x' % int(time.time() // 30)))
-        key = base64.b64decode(secret)
-        auth = hmac.new(key, msg, hashlib.sha1)
+        byte_time = bytes.fromhex(('%016x' % int(time.time() // 30)))
+        auth = hmac.new(base64.b64decode(secret), byte_time, hashlib.sha1)
         digest = auth.digest()
         start = digest[19] & 0xF
         code = digest[start:start + 4]
         auth_code_raw = int(codecs.encode(code, 'hex'), 16) & 0x7FFFFFFF
 
         auth_code = []
-        for i in range(5):
+        for _ in range(5):
             auth_code.append(steam_decode_chars[int(auth_code_raw % len(steam_decode_chars))])
             auth_code_raw /= len(steam_decode_chars)
 
         return ''.join(auth_code)
         """
         # py2
-        auth_code = ''
+        auth_code = []
         hex_time = ('%016x' % (time.time() // 30))
         byte_time = hex_time.decode('hex')
 
         digest = hmac.new(base64.b64decode(secret), byte_time, hashlib.sha1).digest()
         begin = ord(digest[19:20]) & 0xF
-        c_int = int((digest[begin:begin + 4]).encode('hex'), 16) & 0x7fffffff
+        auth_code_raw = int((digest[begin:begin + 4]).encode('hex'), 16) & 0x7fffffff
 
         for _ in range(5):
-            auth_code += steam_decode_chars[c_int % len(steam_decode_chars)]
-            c_int /= len(steam_decode_chars)
+            auth_code.append(steam_decode_chars[auth_code_raw % len(steam_decode_chars)])
+            auth_code_raw /= len(steam_decode_chars)
 
-        return auth_code
+        return ''.join(auth_code)
 
     # READ keychain pass and parse escaping characters
     keychain_name = "{}.keychain".format(os.getenv('keychain_name'))
@@ -136,7 +123,6 @@ def main(wf):
         # if service is a steamguard, call steamguard code-gen method
         if not service in steam_accounts:
             # Standard TOTP Services
-            # Process.run("oathtool", ["--totp", "-b", pass], output: io)
             otp_key = ''.join((filter(None, run("/usr/local/bin/oathtool --totp -b \"{}\"".format(secret), shell=True).split("\n"))))
             wf.add_item('{}'.format(service), otp_key, valid=True, arg=otp_key)
         else:
