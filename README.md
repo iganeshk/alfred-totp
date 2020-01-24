@@ -1,6 +1,6 @@
 <h1 align="center">
   <a href="https://github.com/iganeshk/alfred-totp" title="Alfred TOTP Workflow">
-    <img alt="Alfred TOTP" src="https://github.com/iganeshk/alfred-totp/raw/master/assets/alfred-totp.png" width="15%"/>
+    <img alt="Alfred TOTP" src="../assets/standardnotes.png?raw=true"/>
   </a>
   <br />
   Alfred 2-Factor Authenticator Workflow
