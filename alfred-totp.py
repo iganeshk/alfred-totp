@@ -46,7 +46,7 @@ def main(wf):
                               'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K',
                               'M', 'N', 'P', 'Q', 'R', 'T', 'V', 'W',
                               'X', 'Y']
-        # py3
+        # py3 ready
         """
         byte_time = bytes.fromhex(('%016x' % int(time.time() // 30)))
         auth = hmac.new(base64.b64decode(secret), byte_time, hashlib.sha1)
@@ -96,45 +96,36 @@ def main(wf):
     # set_config('keychain_name', $query)
 
     # Unlock Keychain (to be closed in time interval of 1 min)
-    # py3
+    # py3 ready
     # run(["security unlock-keychain -w {} -p {}".format(keychain_pass, keychain_name), shell=True)
     # py2
     run("security unlock-keychain -p {} {}".format(keychain_pass, keychain_name), shell=True)
 
     # Dump TOTP Services
-    # py3
-    #totp_services = sorted(filter(None, run(["security dump-keychain {} | grep 0x00000007 | awk -F= \'{{print $2}}\'".format(keychain_name)], stdout=PIPE, shell=True).stdout.decode('utf-8').replace("\"", "").split("\n")), key=str.lower)
+    # py3 ready
+    # totp_services = sorted(filter(None, run(["security dump-keychain {} | grep 0x00000007 | awk -F= \'{{print $2}}\'".format(keychain_name)], stdout=PIPE, shell=True).stdout.decode('utf-8').replace("\"", "").split("\n")), key=str.lower)
     # py2
-    totp_services = sorted(filter(None, run("security dump-keychain {} | grep 0x00000007 | awk -F= \'{{print $2}}\'".format(keychain_name), shell=True).replace("\"", "").split("\n")), key=str.lower)
-
-    # Get Steam Secret if present
-    # py3
-    # steam_secret = list(filter(None, run(["security find-generic-password -j {} {} | grep icmt | awk -F= \'{{print $2}}\'".format("steamguard", keychain_name)], stdout=PIPE, shell=True).stdout.decode('utf-8').replace("\"", "").split("\n")))
-    # Get Steam Account(s)
-    # py3
-    # steam_accounts = sorted(filter(None, run(["security dump-keychain {} | grep -B 8 {} | grep 0x00000007 | awk -F= \'{{print $2}}\'".format(keychain_name, "steamguard")], stdout=PIPE, shell=True).stdout.decode('utf-8').replace("\"", "").split("\n")), key=str.lower)
-    # py2
-    steam_accounts = sorted(filter(None, run("security dump-keychain {} | grep -B 8 {} | grep 0x00000007 | awk -F= \'{{print $2}}\'".format(keychain_name, "steamguard"), shell=True).replace("\"", "").split("\n")), key=str.lower)
+    # Grabbing "Service" key from keychain dump since 0x00000007 does not reflect after changes made from keychain
+    dict_totp = sorted(filter(None, run("security dump-keychain {} | grep -e svce -e icmt | awk -F= \'{{print $2}}\'| paste -d \":\" - -".format(keychain_name), shell=True).replace("\"", "").split("\n")))
+    # reverse the order key:value, comment:service -> service:comment and map it.
+    totp_srv_cmts = dict((y, x) for x, y in dict(map(lambda s: s.split(':'), dict_totp)).iteritems())
 
     # Generate OTPs for all services
-    for service in totp_services:
+    for service in totp_srv_cmts:
         # get key's secret from keychain
         secret = ''.join((filter(None, run("security find-generic-password -s {} -w {}".format(service, keychain_name), shell=True).split("\n"))))
         # if service is a steamguard, call steamguard code-gen method
-        if not service in steam_accounts:
+        if not totp_srv_cmts[service] == "steamguard":
             # Standard TOTP Services
             otp_key = ''.join((filter(None, run("/usr/local/bin/oathtool --totp -b \"{}\"".format(secret), shell=True).split("\n"))))
-            wf.add_item('{}'.format(service), otp_key, valid=True, arg=otp_key)
+            if not totp_srv_cmts[service] == "<NULL>" and os.path.isfile("./icons/{}.png".format(totp_srv_cmts[service])):
+                wf.add_item('{}'.format(service), otp_key, valid=True, arg=otp_key, icon="./icons/{}.png".format(totp_srv_cmts[service]))
+            else:
+                wf.add_item('{}'.format(service), otp_key, valid=True, arg=otp_key)
         else:
             # Non-Standard TOTP Services (╯°□°)╯︵ ┻━┻ STEAM
             otp_key = get_steamguard_code(secret)
-            wf.add_item('{}'.format(service), otp_key, valid=True, arg=otp_key)
-
-        # services_dict.update(dict(
-        #     identifier=service,
-        #     secret='key_secret',
-        #     isSteam=False,
-        # ))
+            wf.add_item('{}'.format(service), otp_key, valid=True, arg=otp_key, icon="./icons/{}.png".format(totp_srv_cmts[service]))
 
     # # If `query` is `None` or an empty string, all items are returned
     # items = wf.filter(query, items)

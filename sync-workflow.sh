@@ -76,6 +76,7 @@ while [ "$1" != "" ]; do
 					;;
 			revsync | --revsync)
 					_init_env
+					_revsync_workflow
 					exit
 					;;
 			export| --export)
