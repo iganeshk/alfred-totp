@@ -1,13 +1,7 @@
 /docs/
 /lib/
 /bin/
-/.shards/
-*.dwarf
-/workflow/
-Makefile
-Alfred-TOTP
+
 
 # Libraries don't need dependency lock
 # Dependencies will be locked in applications that use them
-/shard.lock
-shard.yml
