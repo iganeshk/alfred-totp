@@ -3,14 +3,12 @@
     <img alt="Alfred TOTP" src="https://github.com/iganeshk/alfred-totp/raw/master/assets/alfred-totp.png" width="15%"/>
   </a>
   <br />
-  Alfred TOTP Workflow
+  Alfred 2-Factor Authenticator Workflow
 </h1>
 <p align="center">
-  Obtain one time passwords from alfred.
+  Generate two-factor authentication tokens using Alfred.
 
 [![Version](https://img.shields.io/github/tag/iganeshk/alfred-totp.svg?style=flat-square&label=release)](https://github.com/iganeshk/alfred-totp/tags)
-[![Build Status](https://travis-ci.com/iganeshk/alfred-totp.svg?branch=master)](https://travis-ci.com/iganeshk/alfred-totp)
-[![Issues](https://img.shields.io/github/issues/iganeshk/alfred-totp.svg?style=flat-square)](https://github.com/iganeshk/alfred-totp/issues)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE.md)
 <!-- [![Downloads](https://img.shields.io/github/downloads/iganeshk/alfred-totp/total.svg?style=flat-square)](https://github.com/iganeshk/alfred-totp/releases) -->
 </p>
@@ -19,7 +17,6 @@
 
 * [AlfredApp](https://www.alfredapp.com/) (Alfred 3 & 4 tested)
 * [Brew](https://brew.sh/) package manager
-* Python3 (SteamGuard OTP support)
 
 ## Installation
 
@@ -61,6 +58,8 @@ If you would like to display all the service's passwords at once, configure the 
 
 * Note: Icons reflected in the results are located at workflow's icon directory and follow service name as entered in the keychain.
 
-## Thanks
+## Acknowledgments
 
-Thanks to [waynehoover](https://github.com/waynehoover/) and [aria.ia](https://www.aria.ai/blog/posts/storing-secrets-with-keychain.html) for the code on how to list items from macOS keychain.
+* [aria.ia](https://www.aria.ai/blog/posts/storing-secrets-with-keychain.html) for the documentation on macOS Keychain CLI.
+* Full-featured library for writing Alfred 3 & 4 workflows https://www.deanishe.net/alfred-workf…
+
