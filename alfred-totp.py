@@ -17,10 +17,11 @@ import hashlib
 import time
 import re
 import os
+import argparse
 from subprocess import check_output as run
-from workflow import Workflow3 as Workflow, ICON_INFO
+from workflow import Workflow3 as Workflow, ICON_INFO, ICON_ERROR, ICON_WARNING, ICON_COLOR
 from workflow.util import set_config
-
+log = None
 
 def main(wf):
     """
@@ -36,7 +37,6 @@ def main(wf):
 
     # Get args from Workflow3, already in normalized Unicode.
     # This is also necessary for "magic" arguments to work.
-
 
     def get_steamguard_code(secret):
         """
@@ -77,82 +77,131 @@ def main(wf):
 
         return ''.join(auth_code)
 
-    # READ keychain pass and parse escaping characters
-    keychain_name = "{}.keychain".format(os.getenv('keychain_name'))
-    keychain_pass = re.escape((os.getenv('keychain_pass')))
-
-    # args from alfred
-    query = ""
-    secret = ""
-    otp_key = ""
-    if len(wf.args) >= 1:
+    def workflow_keychain_setup(query, otp_query):
         try:
-            query = int(wf.args[0].strip())
-        except ValueError:
+            # no keychain setup, prompt user for setup
+            # this method needs work
+            if not query:
+                wf.add_item(
+                    title="2FA Keychain has'nt been setup yet!",
+                    subtitle="Hit Enter/Tab to continue...",
+                    autocomplete="setup ",
+                    icon=ICON_WARNING,
+                    valid=False,
+                    )
+            if str(query[0]) == "setup" and len(query) <= 3:
+                # setup mode
+                wf.add_item(
+                    title="Enter keychain name (without .keychain) and password",
+                    subtitle="Example: alfred-totp $ecur3P@ssw0rd (press enter)",
+                    icon=ICON_INFO,
+                    uid="keyNamePass",
+                    autocomplete="{} done".format(otp_query),
+                    valid=False,
+                    )
+            if str(args.query[0]) == "setup" and str(query[3]) == "done":
+                wf.add_item(
+                    title="Keychain has been configured!",
+                    subtitle="Now trigger the workflow again",
+                    uid="keyNamePass",
+                    icon=ICON_COLOR,
+                    valid=True,
+                    )
+                # set env variables
+                set_config('keychain_name', query[1])
+                set_config('keychain_pass', query[2])
+        except:
             pass
 
+    # ---------------------------------------------------
+    # Workflow Begins
+    # ---------------------------------------------------
+    # READ keychain pass and parse escaping characters
+    keychain_name = "{}.keychain".format(os.getenv('keychain_name'))
+    keychain_pass = re.escape(os.getenv('keychain_pass'))
 
-    # set env variables
-    # set_config('keychain_name', $query)
+    # Arguments from alfred
+    _reserved_words = ['add', 'update', 'remove', 'setup']
+    parser = argparse.ArgumentParser()
+    parser.add_argument('query', nargs='*', default=None)
+    args = parser.parse_args(wf.args)
+    otp_query = ' '.join(args.query)
 
-    # Unlock Keychain (to be closed in time interval of 1 min)
-    # py3 ready
-    # run(["security unlock-keychain -w {} -p {}".format(keychain_pass, keychain_name), shell=True)
-    # py2
-    run("security unlock-keychain -p {} {}".format(keychain_pass, keychain_name), shell=True)
+    # Workflow Variables
+    otp_key = ""
 
-    # Dump TOTP Services
-    # py3 ready
-    # totp_services = sorted(filter(None, run(["security dump-keychain {} | grep 0x00000007 | awk -F= \'{{print $2}}\'".format(keychain_name)], stdout=PIPE, shell=True).stdout.decode('utf-8').replace("\"", "").split("\n")), key=str.lower)
-    # py2
-    # Grabbing "Service" key from keychain dump since 0x00000007 does not reflect after changes made from keychain
-    dict_totp = sorted(filter(None, run("security dump-keychain {} | grep -e svce -e icmt | awk -F= \'{{print $2}}\'| paste -d \":\" - -".format(keychain_name), shell=True).replace("\"", "").split("\n")))
-    # reverse the order key:value, comment:service -> service:comment and map it.
-    totp_srv_cmts = dict((y, x) for x, y in dict(map(lambda s: s.split(':'), dict_totp)).iteritems())
+    if not (os.getenv('keychain_name') and os.getenv('keychain_pass')):
+        workflow_keychain_setup(args.query, otp_query)
+    else:
+        # Unlock Keychain
+        # py3 ready
+        # run(["security unlock-keychain -w {} -p {}".format(keychain_pass, keychain_name), shell=True)
+        # py2
+        # implement: call setup again if keychain fails to open
+        run("security unlock-keychain -p {} {}".format(keychain_pass, keychain_name), shell=True)
+        log.debug("keychain: unlocked")
 
-    # Generate OTPs for all services
-    for service in totp_srv_cmts:
-        # get key's secret from keychain
-        secret = ''.join((filter(None, run("security find-generic-password -s {} -w {}".format(service, keychain_name), shell=True).split("\n"))))
-        # if service is a steamguard, call steamguard code-gen method
-        if not totp_srv_cmts[service] == "steamguard":
-            # Standard TOTP Services
-            otp_key = ''.join((filter(None, run("/usr/local/bin/oathtool --totp -b \"{}\"".format(secret), shell=True).split("\n"))))
-            if not totp_srv_cmts[service] == "<NULL>" and os.path.isfile("./icons/{}.png".format(totp_srv_cmts[service])):
-                wf.add_item('{}'.format(service), otp_key, valid=True, arg=otp_key, icon="./icons/{}.png".format(totp_srv_cmts[service]))
+        # Dump TOTP Services
+        # py3 ready
+        # totp_services = sorted(filter(None, run(["security dump-keychain {} | grep 0x00000007 | awk -F= \'{{print $2}}\'".format(keychain_name)], stdout=PIPE, shell=True).stdout.decode('utf-8').replace("\"", "").split("\n")), key=str.lower)
+        # py2
+        # note: grabbing "Service" attribute from keychain dump since 0x00000007 does not reflect changes made to keychain
+        temp_dict = sorted(filter(None, run("security dump-keychain {} | grep -e svce -e icmt | awk -F= \'{{print $2}}\'| paste -d \":\" - -".format(keychain_name), shell=True).replace("\"", "").split("\n")))
+        # reverse the order of mapped dictionary comment:service -> service:comment
+        services_dict = dict((y, x) for x, y in dict(map(lambda s: s.split(':'), temp_dict)).iteritems())
+
+        # Generate OTPs for all services
+        for service in services_dict:
+            # get key's secret from keychain
+            if not services_dict[service].startswith("steam"):
+                # Standard TOTP Services
+                otp_key = ''.join((filter(None, run("/usr/local/bin/oathtool --totp -b \"{}\"".format(
+                    ''.join((filter(None, run("security find-generic-password -s {} -w {}".format(service, keychain_name), shell=True).split("\n"))))
+                    ), shell=True).split("\n"))))
             else:
-                wf.add_item('{}'.format(service), otp_key, valid=True, arg=otp_key)
+                # Non-Standard TOTP Services (╯°□°)╯︵ ┻━┻ STEAM
+                otp_key = get_steamguard_code(
+                    ''.join((filter(None, run("security find-generic-password -s {} -w {}".format(service, keychain_name), shell=True).split("\n"))))
+                    )
+            # add service-type, otp_key to the service dictionary
+            services_dict[service] = [services_dict[service], otp_key]
+
+        # Lock Keychain when we're done!
+        run("security lock-keychain {}".format(keychain_name), shell=True)
+        log.debug("keychain: locked")
+
+    # If `query` is `None` or an empty string, all items are returned
+    try:
+        if not args.query:
+            # else display all the services
+            for service in services_dict.keys():
+                if services_dict[service][0] != "<NULL>" and os.path.isfile("./icons/{}.png".format(services_dict[service][0])):
+                    wf.add_item(
+                        '{}'.format(service),
+                        services_dict[service][1],
+                        valid=True, arg=otp_key,
+                        icon="./icons/{}.png".format(services_dict[service][0])
+                    )
+                else:
+                    wf.add_item(
+                        '{}'.format(service),
+                        services_dict[service][1],
+                        valid=True, arg=otp_key
+                    )
         else:
-            # Non-Standard TOTP Services (╯°□°)╯︵ ┻━┻ STEAM
-            otp_key = get_steamguard_code(secret)
-            wf.add_item('{}'.format(service), otp_key, valid=True, arg=otp_key, icon="./icons/{}.png".format(totp_srv_cmts[service]))
-
-    # # If `query` is `None` or an empty string, all items are returned
-    # items = wf.filter(query, items)
-
-    # # Show error if there are no results. Otherwise, Alfred will show
-    # # its fallback searches (i.e. "Search Google for 'XYZ'")
-    # if not items:
-    #     wf.add_item('No matches', icon=ICON_WARNING)
-
-    # # Generate list of results. If `items` is an empty list nothing happens
-    # for item in items:
-    #     wf.add_item(item['title'], ...)
+            items = wf.filter(str(args.query[0]), services_dict.keys())
+            for service in items:
+                # implement: missing service icon
+                wf.add_item(
+                    '{}'.format(service),
+                    services_dict[service][1],
+                    valid=True, arg=services_dict[service][1],
+                    icon="./icons/{}.png".format(services_dict[service][0])
+                )
+    except:
+        pass
 
     wf.send_feedback()
-    # # Dump to JSON
-    # services_json = json.loads(services_dict)
-
-    # Add an item to Alfred feedback
-    # wf.add_item(u'Item title', u'Item subtitle')
-
-    # Send output to Alfred. You can only call this once.
-    # Well, you *can* call it multiple times, but subsequent calls
-    # are ignored (otherwise the JSON sent to Alfred would be invalid).
-    # wf.send_feedback()
-
-    # Lock Keychain when we're done!
-    run("security lock-keychain {}".format(keychain_name), shell=True)
 
 
 if __name__ == '__main__':
@@ -164,8 +213,8 @@ if __name__ == '__main__':
         },
         help_url='https://github.com/iganeshk/alfred-totp'
     )
-
-    workflow3.magic_prefix = 'otp:'
+    log = workflow3.logger
+    # workflow3.magic_prefix = 'otp:'
 
     # Call your entry function via `Workflow.run()` to enable its helper
     # functions, like exception catching, ARGV normalization, magic

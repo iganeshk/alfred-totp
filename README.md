@@ -1,6 +1,6 @@
 <h1 align="center">
   <a href="https://github.com/iganeshk/alfred-totp" title="Alfred TOTP Workflow">
-    <img alt="Alfred TOTP" src="../assets/icon.png?raw=true"/ width="25%">
+    <img alt="Alfred TOTP" src="../assets/icon.png?raw=true"/ width="20%">
   </a>
   <br />
   Alfred 2-Factor Authenticator Workflow
@@ -61,5 +61,5 @@ If you would like to display all the service's passwords at once, configure the 
 ## Acknowledgments
 
 * [aria.ia](https://www.aria.ai/blog/posts/storing-secrets-with-keychain.html) for the documentation on macOS Keychain CLI.
-* Full-featured library for writing Alfred 3 & 4 workflows https://www.deanishe.net/alfred-workf…
+* Full-featured library for writing Alfred 3 & 4 workflows https://github.com/deanishe/alfred-workflow
 

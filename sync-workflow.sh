@@ -26,25 +26,30 @@ _init_env() {
 }
 
 _export_workflow()  {
-	# Create releases directory if needed
-	if [[ ! -d "./releases" ]]; then
-		mkdir "releases"
-	fi
-	readonly workflow_name="$(/usr/libexec/PlistBuddy -c 'print name' "${info_plist}")"
-	readonly workflow_file="./releases/${workflow_name}.alfredworkflow"
+	if [ -d $workflow_dir ]; then
 
-	if /usr/libexec/PlistBuddy -c 'print variablesdontexport' "${info_plist}" &> /dev/null; then
-		readonly workflow_dir_to_package="$(mktemp -d)"
-		cp -R "${workflow_dir}/"* "${workflow_dir_to_package}"
+		# Create releases directory if needed
+		if [[ ! -d "./releases" ]]; then
+			mkdir "releases"
+		fi
+		readonly workflow_name="$(/usr/libexec/PlistBuddy -c 'print name' "${info_plist}")"
+		readonly workflow_file="./releases/${workflow_name}.alfredworkflow"
 
-		readonly tmp_info_plist="${workflow_dir_to_package}/info.plist"
-		/usr/libexec/PlistBuddy -c 'Print variablesdontexport' "${tmp_info_plist}" | grep '    ' | sed -E 's/ {4}//' | xargs -I {} /usr/libexec/PlistBuddy -c "Set variables:'{}' ''" "${tmp_info_plist}"
+		if /usr/libexec/PlistBuddy -c 'print variablesdontexport' "${info_plist}" &> /dev/null; then
+			readonly workflow_dir_to_package="$(mktemp -d)"
+			cp -R "${workflow_dir}/"* "${workflow_dir_to_package}"
+
+			readonly tmp_info_plist="${workflow_dir_to_package}/info.plist"
+			/usr/libexec/PlistBuddy -c 'Print variablesdontexport' "${tmp_info_plist}" | grep '    ' | sed -E 's/ {4}//' | xargs -I {} /usr/libexec/PlistBuddy -c "Set variables:'{}' ''" "${tmp_info_plist}"
+		else
+			readonly workflow_dir_to_package="${workflow_dir}"
+		fi
+
+		ditto -ck "${workflow_dir_to_package}" "${workflow_file}"
+		echo -e "Exported worflow to ${workflow_file}"
 	else
-		readonly workflow_dir_to_package="${workflow_dir}"
+		echo -e "Invalid UUID, cannot find the workflow"
 	fi
-
-	ditto -ck "${workflow_dir_to_package}" "${workflow_file}"
-	echo -e "Exported worflow to ${workflow_file}"
 }
 
 _sync_workflow()	{
